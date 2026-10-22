@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "meta": {
+    "example_id": "local-chat-recommendation-macbook-m3-16gb",
+    "description": "Illustrative model evaluation for everyday conversational reasoning, synthesis, and research on an Apple Silicon M3 (16GB Unified Memory) MacBook",
+    "data_nature": "All benchmark ratings, memory allocations, and token generation numbers are illustrative engineering estimates derived from unified memory bandwidth architecture."
+  },
+  "user_input": {
+    "task": "General-purpose personal research assistant for document summarization, analytical reasoning, and private conversation",
+    "desired_features": ["Zero external telemetry", "Low battery drain", "Fast startup", "Minimum 8k context window"],
+    "commercial_use": false,
+    "target_runtime": "LM Studio (Metal Acceleration) / llama.cpp",
+    "hardware": {
+      "os": "macOS Sonoma / Sequoia",
+      "cpu": "Apple M3 (8-core CPU: 4 performance + 4 efficiency)",
+      "system_ram_gb": 16,
+      "ram_type": "Unified Memory (UMA)",
+      "theoretical_memory_bandwidth_gbs": 100,
+      "gpu": "Integrated 10-core Metal GPU",
+      "free_storage_gb": 85,
+      "storage_type": "Apple Internal NVMe SSD"
+    }
+  },
+  "hardware_budget_analysis": {
+    "total_unified_memory_gb": 16.0,
+    "macos_system_and_display_reserved_gb": 4.5,
+    "default_metal_wired_mem_limit_gb": 11.5,
+    "usable_memory_for_ai_gb": 10.5,
+    "recommended_safety_margin_gb": 1.5,
+    "target_max_model_allocation_gb": 9.0,
+    "feasibility_assessment": "On a 16GB Apple Silicon device, approximately 9GB to 10GB can be safely allocated to Metal inference buffers without provoking kernel swap memory compression. Models in the 7B to 9B parameter class at 4-bit or 5-bit quantization run comfortably with full Metal GPU acceleration at 25-35 tok/s."
+  },
+  "candidate_comparison": [
+    {
+      "model_name": "Llama-3.1-8B-Instruct",
+      "quantization": "Q5_K_M (5.5 bits/weight)",
+      "parameter_count_billions": 8.0,
+      "weights_memory_gb": 5.7,
+      "kv_cache_memory_gb_at_8k_fp16": 1.0,
+      "total_memory_required_gb": 7.2,
+      "fits_in_budget": true,
+      "estimated_speed_range_tok_per_sec": "28 - 34",
+      "license": "Meta Llama 3.1 Community License (Free for non-commercial and commercial up to 700M MAU)",
+      "context_window_native_tokens": 131072,
+      "strengths": ["Strong multi-turn instruction following", "Broad tool and ecosystem support", "Moderate memory footprint leaves 3.3GB free for macOS and open applications"],
+      "limitations": ["Lower math and formal logic reasoning compared to specialized distilled reasoning models"]
+    },
+    {
+      "model_name": "DeepSeek-R1-Distill-Qwen-8B",
+      "quantization": "Q4_K_M (4.5 bits/weight)",
+      "parameter_count_billions": 8.1,
+      "weights_memory_gb": 4.9,
+      "kv_cache_memory_gb_at_8k_fp16": 1.2,
+      "total_memory_required_gb": 6.6,
+      "fits_in_budget": true,
+      "estimated_speed_range_tok_per_sec": "30 - 36",
+      "license": "MIT (Permissive open source)",
+      "context_window_native_tokens": 131072,
+      "strengths": ["Autonomous chain-of-thought thinking for difficult analytical, coding, and mathematical problems", "Permissive MIT license"],
+      "limitations": ["Generates hundreds of reasoning tokens before providing answers, increasing output latency for simple questions"]
+    },
+    {
+      "model_name": "Qwen2.5-14B-Instruct",
+      "quantization": "Q4_K_M (4.5 bits/weight)",
+      "parameter_count_billions": 14.7,
+      "weights_memory_gb": 8.9,
+      "kv_cache_memory_gb_at_8k_fp16": 1.6,
+      "total_memory_required_gb": 11.0,
+      "fits_in_budget": false,
+      "estimated_speed_range_tok_per_sec": "14 - 18 (Risk of macOS memory pressure and disk swap)",
+      "license": "Apache 2.0 (Permissive open source)",
+      "context_window_native_tokens": 131072,
+      "strengths": ["Significantly higher analytical and general knowledge depth than 8B models"],
+      "limitations": ["Leaves less than 1.0GB of RAM for the entire operating system, web browser, and background apps, frequently triggering macOS swap memory slowdowns"]
+    }
+  ],
+  "recommendation": {
+    "best_fit": {
+      "model_name": "Llama-3.1-8B-Instruct (Q5_K_M)",
+      "huggingface_repo": "bartowski/Meta-Llama-3.1-8B-Instruct-GGUF",
+      "file_name": "Meta-Llama-3.1-8B-Instruct-Q5_K_M.gguf",
+      "rationale": "Strikes the optimal equilibrium between intellectual capability, low battery consumption, and memory safety on a 16GB Mac. Using Q5_K_M preserves high conversational fidelity while occupying only ~6.8GB total working memory.",
+      "trade_offs": "Not fine-tuned for extended chain-of-thought math proofs; for mathematical problem solving, Alternative 1 is superior."
+    },
+    "alternative_reasoning": {
+      "model_name": "DeepSeek-R1-Distill-Qwen-8B (Q4_K_M)",
+      "huggingface_repo": "bartowski/DeepSeek-R1-Distill-Qwen-8B-GGUF",
+      "file_name": "DeepSeek-R1-Distill-Qwen-8B-Q4_K_M.gguf",
+      "rationale": "Recommended when complex logical deduction, riddle solving, or technical synthesis is the primary workload."
+    },
+    "alternative_compact": {
+      "model_name": "Llama-3.2-3B-Instruct (Q8_0)",
+      "huggingface_repo": "bartowski/Llama-3.2-3B-Instruct-GGUF",
+      "file_name": "Llama-3.2-3B-Instruct-Q8_0.gguf",
+      "rationale": "Ultra-lightweight option consuming under 3.5GB memory at Q8_0 precision. Near-zero impact on battery life and executes at >55 tok/s."
+    }
+  },
+  "deployment_and_validation": {
+    "installation_commands": [
+      "# In LM Studio: Search for 'bartowski/Meta-Llama-3.1-8B-Instruct-GGUF' and select Q5_K_M",
+      "# Alternatively via terminal with llama.cpp:",
+      "brew install llama.cpp",
+      "llama-cli -hf bartowski/Meta-Llama-3.1-8B-Instruct-GGUF:Meta-Llama-3.1-8B-Instruct-Q5_K_M.gguf -p 'Hello! Provide a 3-bullet summary of quantum computing.' -ngl 99 -c 8192"
+    ],
+    "validation_test_procedure": {
+      "diagnostic_prompt": "Explain the difference between optimistic and pessimistic concurrency control in database architecture with a clear concrete analogy.",
+      "expected_verification": "Check Activity Monitor under 'Memory' to ensure memory pressure stays green (no amber/red swap spikes). Output should stream smoothly with no audio stutter or UI lag."
+    },
+    "cloud_fallback_criteria": "If processing extensive PDF documents exceeding 30,000 words in a single prompt or performing multimodal synthesis across dozens of images, local 16GB hardware will exceed memory limits; use Claude 3.5 Sonnet / Claude 3.7 Sonnet via API."
+  }
+}
+

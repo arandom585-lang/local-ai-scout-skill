@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "meta": {
+    "example_id": "image-generation-recommendation-rtx4070-12gb",
+    "description": "Illustrative model evaluation for local photorealistic and concept art generation on an NVIDIA RTX 4070 12GB desktop",
+    "data_nature": "All render latency estimates and memory breakdown figures are illustrative engineering estimates based on diffusion step count and model precision."
+  },
+  "user_input": {
+    "task": "High-fidelity text-to-image synthesis, creative concept art, typography, and architectural rendering",
+    "desired_features": ["Accurate text rendering inside images", "Complex prompt adherence", "Generation time under 15 seconds per image", "Commercial license compatibility"],
+    "workload_parameters": {
+      "target_resolution": "1024x1024",
+      "batch_size": 1,
+      "vae_tiling": true
+    },
+    "commercial_use": true,
+    "target_runtime": "ComfyUI or Stable Diffusion WebUI Forge",
+    "hardware": {
+      "os": "Windows 11 (64-bit)",
+      "cpu": "Intel Core i7-13700K (16 cores, 24 threads)",
+      "system_ram_gb": 32,
+      "ram_generation": "DDR5-5600",
+      "gpu": "NVIDIA GeForce RTX 4070",
+      "vram_gb": 12,
+      "memory_bus_width_bits": 192,
+      "theoretical_memory_bandwidth_gbs": 504,
+      "free_storage_gb": 350,
+      "storage_type": "PCIe Gen4 NVMe SSD"
+    }
+  },
+  "hardware_budget_analysis": {
+    "total_vram_gb": 12.0,
+    "os_and_display_reserved_vram_gb": 1.2,
+    "usable_vram_gb": 10.8,
+    "recommended_safety_margin_gb": 1.0,
+    "target_max_vram_allocation_gb": 9.8,
+    "feasibility_assessment": "12GB VRAM cannot run unquantized 24GB+ Diffusion Transformers (like full FP16 FLUX.1 with FP16 T5-XXL). However, using FP8 weight quantization or Q4/Q8 GGUF formats combined with ComfyUI's automatic CPU text-encoder offloading allows FLUX.1 and SDXL to fit comfortably within 8GB to 10GB VRAM."
+  },
+  "candidate_comparison": [
+    {
+      "model_name": "FLUX.1 [schnell]",
+      "quantization": "FP8 (e4m3fn) / Q4_K_S GGUF",
+      "architecture": "Diffusion Transformer (12B DiT + T5-XXL + CLIP ViT-L)",
+      "weights_memory_gb": 11.9,
+      "vram_with_cpu_text_encoder_offload_gb": 9.2,
+      "typical_steps": 4,
+      "estimated_latency_seconds_1024x1024": "6 - 10",
+      "license": "Apache 2.0 (Permissive, free for commercial use)",
+      "strengths": ["State-of-the-art prompt adherence and text rendering inside images", "Fast 4-step generation", "Commercial Apache 2.0 license"],
+      "limitations": ["Requires 32GB system RAM to cache the T5-XXL text encoder during initial prompt encoding", "Slightly less fine-grained detail compared to FLUX.1 [dev] 20-step"]
+    },
+    {
+      "model_name": "Stable Diffusion XL 1.0 (SDXL)",
+      "quantization": "FP16 (native base + refiner)",
+      "architecture": "Latent UNet (2.6B + dual CLIP encoders)",
+      "weights_memory_gb": 6.6,
+      "vram_with_cpu_text_encoder_offload_gb": 6.8,
+      "typical_steps": 25,
+      "estimated_latency_seconds_1024x1024": "4 - 7",
+      "license": "CreativeML Open RAIL++-M (Free commercial use with standard behavioral use restrictions)",
+      "strengths": ["Massive ecosystem of fine-tunes, LoRAs, and ControlNets", "Fits entirely into 12GB VRAM without CPU memory swaps", "Fast generation"],
+      "limitations": ["Struggles with coherent multi-word text spelling inside images", "Prone to anatomy glitches on complex compositions compared to DiT models"]
+    },
+    {
+      "model_name": "FLUX.1 [dev]",
+      "quantization": "FP8 (e4m3fn)",
+      "architecture": "Diffusion Transformer (12B DiT + T5-XXL + CLIP ViT-L)",
+      "weights_memory_gb": 11.9,
+      "vram_with_cpu_text_encoder_offload_gb": 9.4,
+      "typical_steps": 20,
+      "estimated_latency_seconds_1024x1024": "22 - 32",
+      "license": "Non-commercial (FLUX.1-dev Non-Commercial License)",
+      "strengths": ["Extreme photorealistic fidelity, micro-textures, and artistic complexity"],
+      "limitations": ["Commercial use strictly prohibited without commercial enterprise agreement", "20 steps take significantly longer than [schnell]"]
+    }
+  ],
+  "recommendation": {
+    "best_fit": {
+      "model_name": "FLUX.1 [schnell] (FP8 / GGUF)",
+      "runtime": "ComfyUI or SD-WebUI Forge",
+      "weights_format": "flux1-schnell-fp8.safetensors or flux1-schnell-Q4_K_S.gguf",
+      "rationale": "Meets both the commercial requirement (Apache 2.0) and high-quality prompt/text fidelity demands. Completes in just 4 steps (~8 seconds on RTX 4070) while fitting within the 10.8GB usable VRAM ceiling when utilizing ComfyUI's standard dynamic text encoder offloading.",
+      "trade_offs": "System RAM must have 16GB-32GB capacity to hold the T5-XXL text encoder during prompt compilation."
+    },
+    "alternative_speed_and_ecosystem": {
+      "model_name": "SDXL 1.0 (FP16)",
+      "runtime": "ComfyUI / Forge / Automatic1111",
+      "rationale": "Recommended if the workflow relies heavily on specialized community LoRAs, IP-Adapter, or ControlNet poses, which are mature and vast on SDXL."
+    },
+    "alternative_ultra_low_memory": {
+      "model_name": "Stable Diffusion 1.5",
+      "runtime": "Any standard WebUI",
+      "rationale": "Legacy fallback requiring under 4GB VRAM. Generates 512x512 images in under 1.5 seconds, but lacks modern prompt comprehension and text spelling."
+    }
+  },
+  "deployment_and_validation": {
+    "installation_commands": [
+      "# Clone ComfyUI and install torch with CUDA 12 support",
+      "git clone https://github.com/comfyanonymous/ComfyUI.git",
+      "cd ComfyUI",
+      "pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121",
+      "pip install -r requirements.txt",
+      "# Download FLUX.1 [schnell] FP8 checkpoint into models/checkpoints/",
+      "# Launch with standard memory management:",
+      "python main.py --windows-standalone-build"
+    ],
+    "validation_test_procedure": {
+      "diagnostic_prompt": "A clean modern coffee shop menu board that clearly reads 'ROAST & CO' in bold white serif typography, soft cinematic morning sunlight, 8k resolution photorealistic.",
+      "expected_verification": "Observe GPU VRAM in Task Manager: memory should peak around 9.2GB-9.8GB during sampling. Text 'ROAST & CO' must render legibly without gibberish characters, completing within 10 seconds."
+    },
+    "cloud_fallback_criteria": "If high-throughput commercial batch rendering (e.g. 50 images concurrently) or 4K native output without upscaling is required, local consumer 12GB VRAM is insufficient; evaluate cloud APIs such as Midjourney, Black Forest Labs FLUX.1 [pro] API, or Google Imagen."
+  }
+}
+

@@ -1,0 +1,113 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "meta": {
+    "example_id": "coding-recommendation-rtx3060",
+    "description": "Illustrative model evaluation for software engineering on an NVIDIA RTX 3060 12GB desktop",
+    "data_nature": "All benchmark ratings and token generation figures are illustrative engineering estimates based on hardware specifications and theoretical bandwidth calculations."
+  },
+  "user_input": {
+    "task": "Interactive code assistant for full-stack TypeScript and Python, integration tests, and repository refactoring in VS Code",
+    "desired_features": ["Fill-in-the-Middle autocomplete", "Interactive copilot chat", "32k context window support"],
+    "commercial_use": true,
+    "target_runtime": "Ollama with Continue.dev VS Code extension",
+    "hardware": {
+      "os": "Windows 11",
+      "cpu": "AMD Ryzen 7 5700X (8 cores, 16 threads)",
+      "system_ram_gb": 32,
+      "ram_generation": "DDR4-3200",
+      "gpu": "NVIDIA GeForce RTX 3060",
+      "vram_gb": 12,
+      "memory_bus_width_bits": 192,
+      "theoretical_memory_bandwidth_gbs": 360,
+      "free_storage_gb": 180,
+      "storage_type": "PCIe Gen4 NVMe SSD"
+    }
+  },
+  "hardware_budget_analysis": {
+    "total_vram_gb": 12.0,
+    "os_and_display_reserved_vram_gb": 1.2,
+    "cuda_context_overhead_gb": 0.4,
+    "usable_vram_gb": 10.4,
+    "recommended_safety_margin_gb": 1.0,
+    "target_max_vram_allocation_gb": 9.4,
+    "feasibility_assessment": "12GB VRAM is sufficient to host a 7B-14B parameter model quantized to 4-bit or 5-bit precision with an 8k-16k token context window entirely within VRAM, delivering high interactive token generation speeds (30-60 tok/s)."
+  },
+  "candidate_comparison": [
+    {
+      "model_name": "Qwen2.5-Coder-14B-Instruct",
+      "quantization": "Q4_K_M (4.5 bits/weight)",
+      "parameter_count_billions": 14.7,
+      "weights_memory_gb": 8.9,
+      "kv_cache_memory_gb_at_8k_fp16": 1.6,
+      "kv_cache_memory_gb_at_16k_q8": 1.6,
+      "kv_cache_memory_gb_at_16k_fp16": 3.2,
+      "total_vram_required_gb": 10.5,
+      "fits_in_vram": true,
+      "estimated_speed_range_tok_per_sec": "30 - 45",
+      "license": "Apache 2.0 (Permissive, unrestricted commercial use)",
+      "context_window_native_tokens": 131072,
+      "strengths": ["State-of-the-art coding benchmark performance in 14B class", "Strong TypeScript/Python syntax and test generation", "Fully open Apache 2.0 license"],
+      "limitations": ["At 8k context (FP16) or 16k context (Q8_0 KV cache), model and cache take ~10.5GB VRAM, filling available VRAM on a 12GB card. If unquantized FP16 KV cache is run at 16k context (3.2GB cache), total memory reaches 12.1GB, exceeding VRAM."]
+    },
+    {
+      "model_name": "Qwen2.5-Coder-7B-Instruct",
+      "quantization": "Q5_K_M (5.5 bits/weight)",
+      "parameter_count_billions": 7.6,
+      "weights_memory_gb": 5.2,
+      "kv_cache_memory_gb_at_16k_fp16": 1.9,
+      "kv_cache_memory_gb_at_32k_fp16": 3.8,
+      "total_vram_required_gb": 7.1,
+      "fits_in_vram": true,
+      "estimated_speed_range_tok_per_sec": "50 - 70",
+      "license": "Apache 2.0 (Permissive, unrestricted commercial use)",
+      "context_window_native_tokens": 131072,
+      "strengths": ["Generates code very fast", "Accommodates 16k context in FP16 with 3.3GB VRAM headroom to spare", "Low VRAM pressure allows running a simultaneous embedding model"],
+      "limitations": ["Lower reasoning depth on complex multi-file architectural refactoring compared to the 14B variant"]
+    },
+    {
+      "model_name": "Qwen2.5-Coder-32B-Instruct",
+      "quantization": "Q4_K_M (4.5 bits/weight)",
+      "parameter_count_billions": 32.5,
+      "weights_memory_gb": 19.8,
+      "kv_cache_memory_gb_at_16k_fp16": 4.3,
+      "total_vram_required_gb": 24.1,
+      "fits_in_vram": false,
+      "estimated_speed_range_tok_per_sec": "4 - 8 (with partial layer offloading across PCIe 4.0 and DDR4 RAM)",
+      "license": "Apache 2.0 (Permissive, unrestricted commercial use)",
+      "context_window_native_tokens": 131072,
+      "strengths": ["Frontier-grade open coding model quality competing with proprietary models"],
+      "limitations": ["Requires offloading ~12GB of weights to system DDR4 RAM, collapsing generation speed below comfortable interactive typing rates"]
+    }
+  ],
+  "recommendation": {
+    "best_fit": {
+      "model_name": "Qwen2.5-Coder-14B-Instruct (Q4_K_M)",
+      "ollama_tag": "qwen2.5-coder:14b-instruct-q4_K_M",
+      "rationale": "Represents the maximum coding intelligence achievable entirely inside 12GB VRAM without CPU-RAM offloading penalties. When deployed with an 8k context window (or 16k with Q8_0 KV cache enabled), it safely stays within the 10.4GB usable VRAM ceiling.",
+      "trade_offs": "To avoid Windows Sysmem Fallback thrashing, restrict context to 8,192 tokens under default FP16 KV cache in Ollama, or enable quantized KV caching for 16k tokens."
+    },
+    "alternative_speed": {
+      "model_name": "Qwen2.5-Coder-7B-Instruct (Q5_K_M)",
+      "ollama_tag": "qwen2.5-coder:7b",
+      "rationale": "Recommended if ultra-low latency autocomplete or concurrent browser/editor GPU load is prioritized. Consumes only ~6.8GB VRAM at 32k context, leaving generous headroom."
+    },
+    "alternative_quality": {
+      "model_name": "Qwen2.5-Coder-32B-Instruct (Q4_K_M with partial offload)",
+      "ollama_tag": "qwen2.5-coder:32b",
+      "rationale": "Viable for deep offline batch refactoring or complex code audits where generation speeds of 4-6 tok/s are acceptable in exchange for frontier reasoning."
+    }
+  },
+  "deployment_and_validation": {
+    "installation_commands": [
+      "# Ensure Ollama is installed on Windows, then pull the primary recommendation",
+      "ollama pull qwen2.5-coder:14b-instruct-q4_K_M",
+      "# Set context window to 16k in Continue.dev config or Ollama Modelfile"
+    ],
+    "validation_test_procedure": {
+      "diagnostic_prompt": "Write an asynchronous TypeScript function that fetches paginated data from an API endpoint with exponential backoff retry logic. Include typing for errors.",
+      "expected_verification": "Verify that VRAM usage in Task Manager / nvidia-smi stabilizes under 10.5GB, generation starts immediately without disk paging thrash, and code compiles without syntax errors."
+    },
+    "cloud_fallback_criteria": "If full-repository analysis exceeding 64,000 tokens is required with multi-step debugging across hundreds of files, fall back to Claude 3.5 Sonnet / Claude 3.7 Sonnet via API, as local 12GB VRAM cannot support 100k+ context without severe memory exhaustion."
+  }
+}
+
